@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Focus Timer</title>
+  <style>
+    :root{
+      --bg-1:#0b1220;
+      --bg-2:#0b1b33;
+      --primary:#4f8cff;
+      --accent:#7a5cff;
+      --good:#22c55e;
+      --warn:#ef4444;
+      --glass: rgba(255,255,255,.08);
+      --text:#e5f0ff;
+      --muted:#a7b7d6;
+      --ring: 628; /* 2πr for r=100 */
+    }
+
+    /* =============== PAGE BACKGROUND =============== */
+    body.focus-body{
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      min-height: 100svh;
+      display:flex; align-items:center; justify-content:center;
+      margin:0; overflow:hidden; color:var(--text);
+      background: radial-gradient(1200px 800px at 20% -20%, #1b2b51 0%, transparent 60%),
+                  radial-gradient(1200px 800px at 120% 120%, #1a2b4e 0%, transparent 60%),
+                  linear-gradient(180deg, var(--bg-1), var(--bg-2));
+      position:relative;
+      isolation:isolate;
+    }
+
+    /* Animated gradient mist */
+    .bg-mist, .bg-mist::before, .bg-mist::after{
+      content:""; position:absolute; inset:-20% -10%;
+      background: conic-gradient(from 0deg,
+                 transparent 0 20%, rgba(79,140,255,.12) 20% 40%,
+                 transparent 40% 60%, rgba(122,92,255,.10) 60% 80%, transparent 80% 100%);
+      filter: blur(60px);
+      animation: spin 40s linear infinite;
+      z-index:-1;
+    }
+    .bg-mist::before{ animation-duration: 55s; opacity:.7; }
+    .bg-mist::after { animation-duration: 75s; opacity:.5; }
+
+    @keyframes spin { to { transform: rotate(1turn); } }
+
+    /* Soft animated bokeh dots */
+    .bokeh{
+      position:absolute; inset:0; pointer-events:none; z-index:-1;
+    }
+    .dot{
+      position:absolute; width:14px; height:14px; border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,0) 70%);
+      opacity:.08; filter: blur(1px);
+      animation: float 18s ease-in-out infinite;
+    }
+    .dot:nth-child(2){ width:10px; height:10px; left:18%; top:70%; animation-duration:22s; }
+    .dot:nth-child(3){ width:16px; height:16px; left:78%; top:20%; animation-duration:26s; }
+    .dot:nth-child(4){ width:12px; height:12px; left:60%; top:80%; animation-duration:20s; }
+    .dot:nth-child(5){ width:20px; height:20px; left:8%;  top:30%; animation-duration:28s; }
+
+    @keyframes float{
+      0%{ transform: translateY(0) translateX(0); }
+      50%{ transform: translateY(-30px) translateX(20px); }
+      100%{ transform: translateY(0) translateX(0); }
+    }
+
+    /* =============== CONTAINER =============== */
+    .focus-container{
+      width:min(860px, 92vw);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 20px;
+      padding: 26px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45),
+                  inset 0 1px 0 rgba(255,255,255,.08);
+      backdrop-filter: blur(10px);
+      animation: rise .7s ease-out both;
+    }
+    @keyframes rise{
+      from{ transform: translateY(18px) scale(.985); opacity:0; }
+      to  { transform: translateY(0)    scale(1);     opacity:1; }
+    }
+
+    .focus-container h1{
+      margin: 0 0 6px 0; font-size: 28px; letter-spacing:.3px;
+    }
+    .subtitle{ margin:0 0 16px 0; color:var(--muted); font-size:14px; }
+
+    /* Header */
+    .focus-header{
+      display:flex; align-items:center; justify-content:space-between;
+      background: rgba(20,30,55,.55);
+      border: 1px solid rgba(255,255,255,.08);
+      padding: 12px 16px; border-radius:14px; margin-bottom:16px;
+    }
+    .focus-header h2{ margin:0; font-size:18px; }
+    .focus-header nav{ display:flex; gap:10px; }
+    .focus-header nav a{
+      text-decoration:none; font-weight:600; font-size:13px;
+      padding:8px 14px; border-radius:10px; color:var(--text);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.1);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .focus-header nav a:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(79,140,255,.25);
+    }
+
+    /* Progress ring */
+    .focus-progress-wrap{ display:grid; place-items:center; margin: 18px 0 6px; }
+    .focus-progress{
+      position:relative; width:240px; height:240px;
+      filter: drop-shadow(0 0 24px rgba(79,140,255,.25));
+    }
+    svg{ transform: rotate(-90deg); }
+    circle{ fill:none; stroke-linecap:round; stroke-width:12; }
+    .bg{ stroke: rgba(255,255,255,.18); }
+    .progress{
+      stroke:url(#grad);
+      stroke-dasharray: var(--ring);
+      stroke-dashoffset: var(--ring);
+      transition: stroke-dashoffset .9s linear;
+    }
+    #time{
+      position:absolute; inset:0;
+      display:grid; place-items:center;
+      font-size:40px; font-weight:800; letter-spacing:.5px;
+      text-shadow: 0 0 18px rgba(79,140,255,.45);
+    }
+    .label-chip{
+      position:absolute; left:50%; bottom:-12px; transform: translateX(-50%);
+      font-size:12px; color:var(--muted);
+      padding:6px 10px; border-radius:999px;
+      background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(4px);
+    }
+
+    /* Buttons */
+    .btns{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin: 16px 0 6px; }
+    .focus-btn{
+      --bg: linear-gradient(180deg, #3f7cff, #3a6df0);
+      background: var(--bg);
+      color:white; border:none; border-radius:12px;
+      padding:12px 16px; font-size:15px; font-weight:600; cursor:pointer;
+      box-shadow: 0 10px 24px rgba(79,140,255,.25), inset 0 1px 0 rgba(255,255,255,.35);
+      transform: translateY(0);
+      transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+      position:relative; overflow:hidden;
+    }
+    .focus-btn:hover{ transform: translateY(-2px); filter: brightness(1.03); }
+    .focus-btn:active{ transform: translateY(0); }
+
+    .focus-break{ --bg: linear-gradient(180deg, #22c55e, #16a34a); box-shadow: 0 10px 24px rgba(34,197,94,.25), inset 0 1px 0 rgba(255,255,255,.35); }
+    .focus-reset{ --bg: linear-gradient(180deg, #ef4444, #dc2626); box-shadow: 0 10px 24px rgba(239,68,68,.25), inset 0 1px 0 rgba(255,255,255,.35); }
+
+    /* Ripple effect */
+    .focus-btn::after{
+      content:""; position:absolute; inset:0; background: radial-gradient(circle at var(--x,50%) var(--y,50%), rgba(255,255,255,.35), transparent 45%);
+      opacity:0; transition:opacity .4s ease; pointer-events:none;
+    }
+    .focus-btn:active::after{ opacity:1; transition:none; }
+
+    /* Settings */
+    #settings{
+      margin-top:14px; text-align:center; color:var(--muted); font-size:14px;
+      background: rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10);
+      border-radius:14px; padding:12px;
+    }
+    #settings h3{ margin:0 0 8px 0; color:var(--text); font-size:16px; }
+    label{ margin: 0 10px; display:inline-flex; align-items:center; gap:6px; }
+    input[type="number"]{
+      width:64px; text-align:center; padding:6px 8px; font-weight:600; color:var(--text);
+      border-radius:10px; border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06); outline:none;
+    }
+    input[type="number"]:focus{ border-color: rgba(79,140,255,.65); box-shadow: 0 0 0 4px rgba(79,140,255,.12); }
+
+    /* Toast */
+    .toast{
+      position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(10px);
+      background: rgba(20,30,55,.85); color:var(--text);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:12px; padding:10px 14px; font-weight:600; font-size:14px;
+      opacity:0; pointer-events:none; transition: all .35s ease; z-index:10;
+      box-shadow: 0 10px 30px rgba(0,0,0,.4);
+    }
+    .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+    /* Responsive */
+    @media (max-width: 520px){
+      #time{ font-size:34px; }
+      .focus-header nav a{ padding:6px 10px; font-size:12px; }
+      .focus-container{ padding:18px; }
+    }
+  </style>
+</head>
+<body class="focus-body">
+  <!-- Animated background layers -->
+  <div class="bg-mist"></div>
+  <div class="bokeh">
+    <span class="dot" style="left:12%;top:48%"></span>
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <!-- Optional BG video (kept for parity, hidden behind glass) -->
+  <video autoplay muted loop id="bg-video" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.08; z-index:-2;">
+    <source src="" type="video/mp4"/>
+  </video>
+
+  <div class="focus-container">
+    <h1>Focus Timer</h1>
+    <p class="subtitle">Stay in flow with short, powerful sessions.</p>
+
+    <header class="focus-header">
+      <h2>Flow Mode</h2>
+      <nav>
+        <a href="/home1">HOME</a>
+        <a href="/focus">FOCUS</a>
+      </nav>
+    </header>
+
+    <div class="focus-progress-wrap">
+      <div class="focus-progress">
+        <svg width="240" height="240" viewBox="0 0 220 220" aria-hidden="true">
+          <defs>
+            <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%"  stop-color="#4f8cff"/>
+              <stop offset="100%" stop-color="#7a5cff"/>
+            </linearGradient>
+          </defs>
+          <circle class="bg" cx="110" cy="110" r="100"></circle>
+          <circle class="progress" cx="110" cy="110" r="100"></circle>
+        </svg>
+        <div id="time" aria-live="polite">25:00</div>
+        <div class="label-chip" id="modeLabel">Ready</div>
+      </div>
+    </div>
+
+    <div class="btns">
+      <button class="focus-btn"        id="btnFocus">Focus</button>
+      <button class="focus-btn focus-break" id="btnShort">Short Break</button>
+      <button class="focus-btn focus-break" id="btnLong">Long Break</button>
+      <button class="focus-btn focus-reset" id="btnReset">Reset</button>
+    </div>
+
+    <div id="settings">
+      <h3>Settings</h3>
+      <label>Focus <input type="number" id="focusTime" value="25" min="1" max="180"> min</label>
+      <label>Short Break <input type="number" id="shortBreak" value="5" min="1" max="60"> min</label>
+      <label>Long Break <input type="number" id="longBreak" value="15" min="1" max="120"> min</label>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Done!</div>
+
+  <script>
+    let timer, timeLeft = 1500, totalTime = 1500;
+
+    const timeEl = document.getElementById("time");
+    const progressEl = document.querySelector(".progress");
+    const modeLabel = document.getElementById("modeLabel");
+    const toast = document.getElementById("toast");
+
+    // ripple position on buttons
+    document.querySelectorAll('.focus-btn').forEach(btn=>{
+      btn.addEventListener('pointerdown', e=>{
+        const r = btn.getBoundingClientRect();
+        btn.style.setProperty('--x', `${e.clientX-r.left}px`);
+        btn.style.setProperty('--y', `${e.clientY-r.top}px`);
+      });
+    });
+
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(()=> toast.classList.remove('show'), 1800);
+    }
+
+    function updateDisplay(){
+      const m = Math.floor(timeLeft/60), s = timeLeft%60;
+      timeEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      const offset = getComputedStyle(document.documentElement).getPropertyValue('--ring');
+      progressEl.style.strokeDashoffset = offset - (timeLeft / totalTime) * offset;
+    }
+
+    function startTimer(mins, label){
+      clearInterval(timer);
+      totalTime = timeLeft = Math.max(1, Number(mins)) * 60;
+      localStorage.setItem("timerStart", Date.now());
+      localStorage.setItem("timerDuration", totalTime);
+      localStorage.setItem("timerLabel", label);
+
+      modeLabel.textContent = label;
+      updateDisplay();
+
+      timer = setInterval(()=>{
+        const start = Number(localStorage.getItem("timerStart"));
+        const elapsed = Math.floor((Date.now() - start)/1000);
+        timeLeft = totalTime - elapsed;
+
+        if (timeLeft > 0){
+          updateDisplay();
+        } else {
+          clearInterval(timer);
+          localStorage.removeItem("timerStart");
+          showToast(`${label} finished!`);
+          modeLabel.textContent = "Ready";
+          timeLeft = 0; updateDisplay();
+        }
+      }, 1000);
+    }
+
+    function resetTimer(){
+      clearInterval(timer);
+      timeLeft = totalTime;
+      localStorage.removeItem("timerStart");
+      modeLabel.textContent = "Ready";
+      updateDisplay();
+    }
+
+    // Button wiring
+    document.getElementById("btnFocus").onclick = () =>
+      startTimer(document.getElementById("focusTime").value || 25, "Focus");
+    document.getElementById("btnShort").onclick = () =>
+      startTimer(document.getElementById("shortBreak").value || 5, "Short Break");
+    document.getElementById("btnLong").onclick = () =>
+      startTimer(document.getElementById("longBreak").value || 15, "Long Break");
+    document.getElementById("btnReset").onclick = resetTimer;
+
+    // Restore running timer on load
+    window.addEventListener('load', ()=>{
+      const s = Number(localStorage.getItem("timerStart"));
+      const d = Number(localStorage.getItem("timerDuration"));
+      const l = localStorage.getItem("timerLabel") || "Ready";
+
+      if (s && d){
+        const e = Math.floor((Date.now()-s)/1000);
+        timeLeft = d - e; totalTime = d;
+        if (timeLeft > 0){
+          modeLabel.textContent = l;
+          timer = setInterval(()=>{
+            const e2 = Math.floor((Date.now()-s)/1000);
+            timeLeft = d - e2;
+            if (timeLeft > 0) updateDisplay();
+            else{
+              clearInterval(timer);
+              localStorage.removeItem("timerStart");
+              showToast(`${l} finished!`);
+              modeLabel.textContent = "Ready";
+              timeLeft = 0; updateDisplay();
+            }
+          }, 1000);
+        } else {
+          localStorage.removeItem("timerStart");
+          modeLabel.textContent = "Ready";
+        }
+      }
+      updateDisplay();
+    });
+  </script>
+</body>
+</html>

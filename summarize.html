@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Summarize • LectureLoom</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
+
+<style>
+:root{
+  --bg-1:#0b0b0d;
+  --bg-2:#101217;
+  --gold-1:#ffcc00;
+  --gold-2:#ff9900;
+  --cyan:#1ea7ff;
+  --text:#e9eef6;
+  --muted:#a7b3c6;
+}
+
+/* Base */
+*{ box-sizing:border-box; }
+html,body{ height:100%; margin:0; font-family:"Poppins",sans-serif; color:var(--text); }
+body{
+  background:
+    radial-gradient(1100px 1100px at 12% 15%, rgba(30,167,255,.14), transparent 60%),
+    radial-gradient(900px 900px at 88% 85%, rgba(255,204,0,.12), transparent 60%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  overflow-x:hidden;
+}
+
+/* Animated mesh glow */
+body::before, body::after{
+  content:""; position:fixed; inset:-20%;
+  background:
+    radial-gradient(50% 50% at 25% 35%, rgba(30,167,255,.15), transparent 60%),
+    radial-gradient(45% 45% at 75% 70%, rgba(255,153,0,.12), transparent 60%),
+    radial-gradient(40% 40% at 50% 50%, rgba(255,0,127,.06), transparent 60%);
+  filter: blur(34px);
+  animation: drift 24s ease-in-out infinite;
+  pointer-events:none; z-index:0; opacity:.85;
+}
+body::after{ animation-duration: 30s; animation-direction: reverse; opacity:.6; }
+@keyframes drift{ 0%,100%{transform:translate(0,0)} 50%{transform:translate(22px,-18px)} }
+
+/* Subtle grid */
+.grid{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(60% 60% at 50% 50%, black 60%, transparent 100%);
+}
+
+/* Navbar (same style as home) */
+nav{
+  position: sticky; top:0; z-index: 1000;
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 14px 24px;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  transition: background .25s ease, box-shadow .25s ease, padding .25s ease;
+}
+nav.scrolled{ background: rgba(0,0,0,0.8); box-shadow: 0 6px 20px rgba(0,0,0,.35); padding: 10px 24px; }
+.logo{ display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.3px; color:#ffd700; }
+.logo::before{
+  content:"L"; display:inline-grid; place-items:center;
+  width:36px; height:36px; border-radius:10px;
+  background: linear-gradient(135deg,var(--gold-1),var(--gold-2));
+  color:#0b0b0d;
+  box-shadow: 0 6px 16px rgba(255,193,7,.25);
+}
+.nav-links{ display:flex; gap:12px; }
+.nav-links a{
+  text-decoration:none; color:#e9eef6; padding:8px 10px; border-radius:8px; position:relative;
+  transition: color .2s ease, background .2s ease;
+}
+.nav-links a:hover{ color:#1ea7ff; }
+.nav-links a[data-current="true"]{
+  color:#0b0b0d; background: linear-gradient(135deg,#ffcc00,#ff9900); font-weight:700;
+}
+
+/* Page container */
+.container{
+  position:relative; z-index:1;
+  width:min(1200px, 92vw);
+  margin: 28px auto 60px;
+  display:grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px;
+}
+@media (max-width: 960px){
+  .container{ grid-template-columns: 1fr; }
+}
+
+/* Cards */
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px);
+  padding: 18px;
+  opacity:0; transform: translateY(24px);
+  animation: rise .9s cubic-bezier(.2,.7,.2,1) .1s forwards;
+}
+.card.right{ animation-delay: .25s; }
+@keyframes rise{ to{opacity:1; transform:none;} }
+
+/* Headings */
+h1{ margin: 4px 0 8px; font-size: clamp(22px, 3.2vw, 28px); }
+.lead{ color:var(--muted); font-size:14px; margin-bottom:12px; }
+
+/* Textarea + counters */
+.textarea-wrap{ position:relative; }
+textarea{
+  width:100%; min-height: 220px; resize: vertical;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 12px;
+  color: var(--text); font-size: 15px; line-height:1.55;
+  padding: 14px; outline:none;
+  transition: border .2s ease, box-shadow .2s ease, background .2s ease;
+}
+textarea:focus{
+  border-color: rgba(30,167,255,.65);
+  box-shadow: 0 0 0 4px rgba(30,167,255,.18);
+  background: rgba(255,255,255,0.08);
+}
+.counters{
+  display:flex; gap:12px; color:var(--muted);
+  font-size:12px; margin-top:8px;
+}
+
+/* Buttons */
+.actions{ display:flex; flex-wrap: wrap; gap:10px; margin-top:14px; }
+.btn{
+  position:relative; overflow:hidden;
+  display:inline-flex; align-items:center; gap:8px;
+  border:none; border-radius:12px; cursor:pointer;
+  font-weight:700; padding: 10px 14px; font-size:14px;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.btn::after{
+  content:""; position:absolute; inset:-2px;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,.38), transparent);
+  transform: translateX(-120%); transition: transform .6s ease; pointer-events:none;
+}
+.btn:hover::after{ transform: translateX(120%); }
+.btn:hover{ transform: translateY(-2px); }
+.ripple{
+  position:absolute; border-radius:50%; background: rgba(255,255,255,.45);
+  transform: scale(0); animation: ripple .6s ease-out forwards; pointer-events:none; mix-blend-mode: screen;
+}
+@keyframes ripple{ to{ transform: scale(12); opacity:0; } }
+
+.btn-primary{
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-2));
+  color:#0b0b0d; box-shadow: 0 12px 22px rgba(255,193,7,.22);
+}
+.btn-secondary{
+  background: linear-gradient(135deg, rgba(30,167,255,.18), rgba(30,167,255,.10));
+  border:1px solid rgba(30,167,255,.4);
+  color:#e9eef6; box-shadow: 0 10px 20px rgba(30,167,255,.15);
+}
+
+/* Loader */
+.spinner{
+  width:18px; height:18px; border-radius:50%;
+  border: 3px solid rgba(255,255,255,.22);
+  border-top-color: #fff;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+/* Results */
+#result-container{
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px; padding: 14px;
+  transform: translateY(10px); opacity: 0; transition: .35s ease;
+}
+#result-container.show{ transform: translateY(0); opacity: 1; }
+#summary-list{ padding-left: 18px; }
+#summary-list li{ margin: 6px 0; }
+
+/* NEW: Summary box actions */
+.summary-actions{
+  display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;
+}
+
+/* Utility */
+.kbd{
+  display:inline-block; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background: rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.18);
+  padding: 2px 6px; border-radius: 6px; font-size: 12px; color: #cfe6ff;
+}
+small.muted{ color: var(--muted); }
+
+/* Mobile tweaks */
+@media (max-width: 680px){
+  .actions, .summary-actions{ gap:8px; }
+  .btn{ padding:9px 12px; font-size:13px; }
+}
+</style>
+</head>
+
+<body>
+<div class="grid" aria-hidden="true"></div>
+
+<!-- NAV -->
+<nav id="topnav">
+  <div class="logo">LectureLoom</div>
+  <div class="nav-links">
+    <a href="{{ url_for('home1') }}">HOME</a>
+    <a href="{{ url_for('summarize_page') }}" data-current="true">SUMMARIZE</a>
+    <a href="{{ url_for('focus_page')}}">FOCUS</a>
+    <a href="{{ url_for('translate_page') }}">TRANSLATE</a>
+    <a href="{{ url_for('recorde_page') }}">RECORD</a>
+   
+  </div>
+</nav>
+
+<!-- CONTENT -->
+<main class="container">
+  <!-- Left: Input -->
+  <section class="card">
+    <h1>AI Text Summarizer 🔊</h1>
+    <div class="lead">Paste any text below and get a clean, short summary with optional audio.</div>
+
+    <div class="textarea-wrap">
+      <textarea id="text" placeholder="Paste or type your content here…"></textarea>
+      <div class="counters">
+        <span id="charCount">0 chars</span>
+        <span>•</span>
+        <span id="wordCount">0 words</span>
+        <span class="kbd" title="Paste">Ctrl/Cmd + V</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="btnSummarize">
+        <span id="sumIcon">✨</span><span id="sumText">Summarize</span>
+      </button>
+      <button class="btn btn-secondary" id="btnDownloadText">⬇️ Text</button>
+      <button class="btn btn-secondary" id="btnCopy">📋 Copy</button>
+      <button class="btn btn-secondary" id="btnClear">🧹 Clear</button>
+    </div>
+  </section>
+
+  <!-- Right: Output -->
+  <aside class="card right">
+    <h2 style="margin:4px 0 10px;">Summary</h2>
+    <small class="muted">Appears here after processing.</small>
+
+    <div id="result-container" style="margin-top:12px;">
+      <ul id="summary-list"></ul>
+
+      <!-- 🔽 New buttons inside the summary box -->
+      <div class="summary-actions">
+        <button class="btn btn-secondary" id="btnDownloadText2">⬇️ Download Text</button>
+        <a class="btn btn-primary" id="btnDownloadAudio2" href="#" download="summary.mp3" style="display:none;">⬇️ Download Audio</a>
+      </div>
+
+      <div style="margin-top:10px;">
+        <audio id="audio-player" controls style="display:none;width:100%;"></audio>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<script>
+/* Sticky nav effect */
+const nav = document.getElementById('topnav');
+window.addEventListener('scroll', ()=> {
+  if (window.scrollY > 8) nav.classList.add('scrolled');
+  else nav.classList.remove('scrolled');
+});
+
+/* Counters */
+const textEl = document.getElementById('text');
+const charCountEl = document.getElementById('charCount');
+const wordCountEl = document.getElementById('wordCount');
+function updateCounts(){
+  const txt = textEl.value;
+  const chars = txt.length;
+  const words = (txt.trim().match(/\S+/g) || []).length;
+  charCountEl.textContent = chars + ' chars';
+  wordCountEl.textContent = words + ' words';
+}
+textEl.addEventListener('input', updateCounts);
+updateCounts();
+
+/* Buttons + ripple */
+function addRipple(e){
+  const btn = e.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  const span = document.createElement('span');
+  span.className = 'ripple';
+  span.style.left = (e.clientX - rect.left) + 'px';
+  span.style.top  = (e.clientY - rect.top)  + 'px';
+  btn.appendChild(span);
+  setTimeout(()=> span.remove(), 600);
+}
+['btnSummarize','btnDownloadText','btnCopy','btnClear','btnDownloadText2'].forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener('click', addRipple);
+});
+
+/* App state */
+let currentSummary = "";
+
+/* Actions */
+const resultContainer = document.getElementById('result-container');
+const listEl = document.getElementById('summary-list');
+const audioEl = document.getElementById('audio-player');
+const audioBtn = document.getElementById('btnDownloadAudio2');
+
+async function doSummarize(){
+  const text = textEl.value;
+  if (!text.trim()){
+    alert("Please enter some text to summarize.");
+    return;
+  }
+
+  // UI: loading
+  const btn = document.getElementById('btnSummarize');
+  const icon = document.getElementById('sumIcon');
+  const label = document.getElementById('sumText');
+  btn.disabled = true;
+  icon.innerHTML = '<span class="spinner"></span>';
+  label.textContent = 'Summarizing…';
+  listEl.innerHTML = '<li>⏳ Working on it…</li>';
+  resultContainer.classList.add('show');
+
+  try{
+    const res = await fetch("/summarize", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+
+    if(!res.ok || !data.summary){
+      listEl.innerHTML = '<li>⚠️ Something went wrong. Please try again.</li>';
+      audioEl.style.display = 'none';
+      audioBtn.style.display = 'none';
+      return;
+    }
+
+    currentSummary = data.summary;
+    const points = currentSummary.split(/[\.\n]\s+/).filter(p=>p.trim().length);
+    listEl.innerHTML = points.map(p => `<li>${p.replace(/^[•\-–]\s*/, '').trim()}</li>`).join('');
+
+    // audio (show player + enable audio download button)
+    audioEl.src = data.audio_file;
+    audioEl.style.display = "block";
+    audioBtn.href = data.audio_file;
+    audioBtn.style.display = "inline-flex";
+  }catch(err){
+    listEl.innerHTML = '<li>⚠️ Network error. Please try again.</li>';
+    audioEl.style.display = 'none';
+    audioBtn.style.display = 'none';
+  }finally{
+    btn.disabled = false;
+    icon.textContent = '✨';
+    label.textContent = 'Summarize';
+  }
+}
+
+function downloadText(){
+  if (!currentSummary){ alert("No summary yet!"); return; }
+  const blob = new Blob([currentSummary], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'summary.txt';
+  a.click();
+}
+
+function doCopy(){
+  if (!currentSummary){ alert("No summary yet!"); return; }
+  navigator.clipboard.writeText(currentSummary).then(()=>{
+    const btn = document.getElementById('btnCopy');
+    const old = btn.textContent;
+    btn.textContent = '✅ Copied';
+    setTimeout(()=> btn.textContent = old, 1000);
+  });
+}
+
+function doClear(){
+  textEl.value = '';
+  updateCounts();
+  currentSummary = '';
+  listEl.innerHTML = '';
+  audioEl.style.display = 'none';
+  audioBtn.style.display = 'none';
+  resultContainer.classList.remove('show');
+}
+
+/* Event wiring */
+document.getElementById('btnSummarize').addEventListener('click', doSummarize);
+document.getElementById('btnDownloadText').addEventListener('click', downloadText);
+document.getElementById('btnDownloadText2').addEventListener('click', downloadText);
+document.getElementById('btnCopy').addEventListener('click', doCopy);
+document.getElementById('btnClear').addEventListener('click', doClear);
+</script>
+</body>
+</html>

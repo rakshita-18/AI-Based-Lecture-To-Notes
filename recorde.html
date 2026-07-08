@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LectureLoom • Record</title>
+
+<style>
+  :root{
+    --bg-1:#0b1220; --bg-2:#0b1b33;
+    --primary:#ffc107; --accent:#4f8cff;
+    --danger:#ef4444; --warn:#f59e0b;
+    --text:#e5f0ff; --muted:#9fb0cc;
+  }
+
+  /* ===== Base page (no image) ===== */
+  body{
+    margin:0; color:var(--text);
+    font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:
+      radial-gradient(1200px 800px at 15% -10%, #1b2b51 0%, transparent 60%),
+      radial-gradient(1200px 800px at 115% 120%, #251a4e 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg-1), var(--bg-2));
+    min-height:100svh; overflow-x:hidden; position:relative; isolation:isolate;
+  }
+  .mist,.mist::before,.mist::after{
+    content:""; position:fixed; inset:-20% -10%;
+    background: conic-gradient(from 0deg,
+      transparent 0 20%, rgba(79,140,255,.10) 20% 40%,
+      transparent 40% 60%, rgba(255,193,7,.08) 60% 80%,
+      transparent 80% 100%);
+    filter: blur(60px);
+    animation: spin 70s linear infinite; z-index:-2;
+  }
+  .mist::before{ animation-duration:90s; opacity:.75 }
+  .mist::after{ animation-duration:110s; opacity:.55 }
+  @keyframes spin{ to{ transform:rotate(1turn) } }
+
+  .grid-overlay{
+    position:fixed; inset:0; pointer-events:none; z-index:-1;
+    background-image:
+      radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+      radial-gradient(rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size:22px 22px, 110px 110px;
+    background-position:0 0, 10px 10px;
+    opacity:.35;
+    mask-image: linear-gradient(180deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  }
+
+  /* ===== Navbar ===== */
+  .navbar{
+    position:sticky; top:0; width:100%; z-index:1000;
+    background: linear-gradient(180deg, rgba(12,12,14,.9), rgba(12,12,14,.78));
+    border-bottom:1px solid rgba(255,255,255,.08);
+    backdrop-filter: blur(8px);
+  }
+  .navbar-inner{
+    height:68px; width:min(1200px,94%); margin:0 auto;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-badge{
+    width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
+    background:#ffd54a;color:#111;font-weight:900;
+    box-shadow:0 6px 16px rgba(255,213,74,.35), inset 0 1px 0 #fff8;
+  }
+  .brand-text{ color:#ffd54a; font-size:18px; font-weight:800; letter-spacing:.2px; }
+
+  .menu{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .menu a{
+    text-decoration:none; color:#e9edf3; font-weight:700; font-size:14px;
+    padding:10px 14px; border-radius:10px;
+    transition: transform .18s ease, color .18s ease, background .18s ease, box-shadow .18s ease;
+  }
+  .menu a:hover{ transform:translateY(-2px); color:#fff; }
+  .menu a.active{
+    background: var(--primary); color:#111; border-radius:12px;
+    box-shadow:0 10px 24px rgba(255,193,7,.35);
+  }
+
+  /* ===== Container & title ===== */
+  .container{ width:min(1200px,94%); margin:26px auto 60px; }
+  .title{ margin:18px 0 8px; }
+  .title h1{ margin:0 0 6px 0; font-size:32px; line-height:1.2; color:#cfe0ff; }
+  .subtitle{ color:var(--muted); }
+
+  /* ===== Waveform ===== */
+  .wave-wrap{ height:44px; margin:12px 0 6px; display:flex; align-items:end; gap:6px; }
+  .bar{ width:6px; height:14px; border-radius:6px; background: linear-gradient(180deg,#9cc4ff,#4f8cff); opacity:.7; transform-origin:bottom center; animation:none; }
+  .wave.active .bar{ animation: bounce 900ms ease-in-out infinite; }
+  .bar:nth-child(2){ animation-delay: .05s } .bar:nth-child(3){ animation-delay: .10s }
+  .bar:nth-child(4){ animation-delay: .15s } .bar:nth-child(5){ animation-delay: .20s }
+  .bar:nth-child(6){ animation-delay: .25s } .bar:nth-child(7){ animation-delay: .30s }
+  .bar:nth-child(8){ animation-delay: .35s }
+  @keyframes bounce{ 0%,100%{ height:14px; filter:saturate(.9) } 50%{ height:36px; filter:saturate(1.2) } }
+
+  /* ===== Grid layout ===== */
+  .layout{ margin-top:16px; display:grid; gap:16px; grid-template-columns:1fr; }
+  @media (min-width:960px){ .layout{ grid-template-columns:1.15fr .85fr; } }
+
+  /* ===== Cards ===== */
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:18px; padding:18px; backdrop-filter: blur(10px);
+    box-shadow:0 16px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
+    opacity:0; transform: translateY(22px) scale(.985);
+    transition: opacity .55s ease, transform .55s ease;
+  }
+  .card.inview{ opacity:1; transform: translateY(0) scale(1); }
+  .card h3{ margin:0 0 10px 0; color:#cfe0ff; font-size:16px; }
+
+  /* ===== Transcript area (95% width) ===== */
+  textarea#output{
+    width:95%; display:block; margin:0 auto;
+    min-height:260px; resize:vertical;
+    border-radius:12px; padding:12px; font-size:14.5px;
+    background:rgba(0,0,0,.35); color:#e2e8f0;
+    border:1px solid rgba(255,255,255,.12); outline:none;
+  }
+  textarea#output:focus{ box-shadow: 0 0 0 4px rgba(79,140,255,.18); border-color: rgba(79,140,255,.45); }
+
+  /* ===== Controls ===== */
+  .controls{ display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+  .btn{
+    appearance:none; border:none; cursor:pointer; user-select:none;
+    font-weight:800; font-size:14px; letter-spacing:.2px;
+    padding:12px 16px; border-radius:12px; color:#0b1220;
+    background:linear-gradient(180deg,#9cc4ff,#4f8cff);
+    box-shadow:0 10px 24px rgba(79,140,255,.3), inset 0 1px 0 rgba(255,255,255,.35);
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, background .2s ease;
+  }
+  .btn:hover{ transform: translateY(-2px); }
+  .btn:disabled{ cursor:not-allowed; opacity:.55; filter:saturate(.7); }
+
+  .btn.record{ color:#fff; background:linear-gradient(180deg,#ff5a5a,#ef4444); box-shadow:0 10px 24px rgba(239,68,68,.35), inset 0 1px 0 rgba(255,255,255,.35);}
+  .btn.pause{ color:#111; background:linear-gradient(180deg,#ffd166,#f59e0b); box-shadow:0 10px 24px rgba(245,158,11,.35), inset 0 1px 0 rgba(255,255,255,.35);}
+  .btn.stop { color:#fff; background:linear-gradient(180deg,#64748b,#334155); box-shadow:0 10px 24px rgba(51,65,85,.35), inset 0 1px 0 rgba(255,255,255,.3);}
+  .btn.save { color:#fff; background:linear-gradient(180deg,#22c55e,#16a34a); box-shadow:0 10px 24px rgba(34,197,94,.35), inset 0 1px 0 rgba(255,255,255,.35);}
+  .btn.ghost{ color:#e5e7eb; background:linear-gradient(180deg,#94a3b8,#475569); }
+  .btn.soft { color:#111; background:linear-gradient(180deg,#9ca3af,#6b7280); }
+
+  .pulse{ position:relative; }
+  .pulse::after{ content:""; position:absolute; inset:-6px; border-radius:16px; border:3px solid rgba(239,68,68,.5); animation: ring 1.2s ease-out infinite; opacity:0; }
+  .pulse.active::after{ opacity:1; }
+  @keyframes ring{ 0%{ transform:scale(.9); opacity:.8; } 100%{ transform:scale(1.15); opacity:0; } }
+
+  .status{
+    display:flex; align-items:center; gap:10px; margin-top:6px; color:var(--muted); font-weight:600;
+    width:95%; margin-left:auto; margin-right:auto;
+  }
+  .dot{ width:10px;height:10px;border-radius:50%; background:#64748b; box-shadow:0 0 12px transparent; }
+  .dot.rec{ background:var(--danger); box-shadow:0 0 12px rgba(239,68,68,.9); }
+  .dot.pau{ background:var(--warn); box-shadow:0 0 12px rgba(245,158,11,.9); }
+  .dot.idl{ background:#60a5fa; box-shadow:0 0 12px rgba(96,165,250,.7); }
+
+  /* ===== History ===== */
+  .history{
+    margin-top:18px;
+    background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:18px; padding:16px; backdrop-filter: blur(10px);
+    box-shadow:0 16px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .history h3{ margin:0 0 10px 0; color:#cfe0ff; font-size:16px; }
+
+  .items{ display:flex; flex-direction:column; gap:10px; }
+  .item{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:10px 12px; border:1px solid rgba(255,255,255,.12); border-radius:12px;
+    background: rgba(0,0,0,.25);
+    transition: transform .18s ease, box-shadow .18s ease, background .2s ease;
+  }
+  .item:hover{ transform: translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,.35); background: rgba(255,255,255,.06); }
+  .meta{ display:flex; flex-direction:column; gap:4px; }
+  .title-row{ display:flex; align-items:center; gap:8px; }
+  .item-title{ font-weight:800; color:#e5f0ff; }
+  .item-date{ color:var(--muted); font-size:12px; }
+  .actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .mini{
+    font-size:12px; padding:8px 10px; border-radius:10px; border:none; cursor:pointer; font-weight:800;
+    background: rgba(255,255,255,.08); color:#e5e7eb;
+  }
+  .mini.open{ background:linear-gradient(180deg,#9cc4ff,#4f8cff); color:#0b1220; }
+  .mini.down{ background:linear-gradient(180deg,#22c55e,#16a34a); color:#fff; }
+  .mini.edit{ background:linear-gradient(180deg,#ffd166,#f59e0b); color:#111; }
+  .mini.del { background:linear-gradient(180deg,#ff5a5a,#ef4444); color:#fff; }
+
+  /* Toast */
+  .toast{
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(10px);
+    background: rgba(20,30,55,.92); color:var(--text);
+    border:1px solid rgba(255,255,255,.12); border-radius:12px;
+    padding:10px 14px; font-weight:700; font-size:14px; opacity:0;
+    transition: all .35s ease; pointer-events:none; z-index:50;
+    box-shadow:0 12px 30px rgba(0,0,0,.45);
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="mist"></div>
+<div class="grid-overlay"></div>
+
+<!-- ===== Navbar ===== -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <div class="brand">
+      <div class="brand-badge">L</div>
+      <div class="brand-text">LectureLoom</div>
+    </div>
+    <div class="menu">
+      <a href="{{ url_for('home1') }}">HOME</a>
+      <a href="{{ url_for('summarize_page') }}">SUMMARIZE</a>
+      <a href="{{ url_for('focus_page') }}">FOCUS</a>
+      <a href="{{ url_for('translate_page') }}">TRANSLATE</a>
+      <a href="{{ url_for('recorde_page') }}" class="active">RECORD</a>
+      
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <section class="title">
+    <h1>🎤 Speech to Text</h1>
+    <p class="subtitle">Record your speech and get instant, editable transcripts with one-click download.</p>
+
+    <!-- Waveform -->
+    <div id="wave" class="wave wave-wrap" aria-hidden="true">
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    </div>
+  </section>
+
+  <section class="layout">
+    <!-- Left: Transcript -->
+    <div class="card" id="card-transcript">
+      <h3>Transcript</h3>
+      <textarea id="output" placeholder="Your speech will appear here..." aria-label="Transcript" readonly></textarea>
+      <div class="status" id="statusRow">
+        <span class="dot idl" id="stateDot"></span>
+        <span id="stateText">Idle</span>
+      </div>
+      <div class="controls">
+        <button id="saveBtn" class="btn save" disabled>💾 Save to History</button>
+        <button id="updateBtn" class="btn ghost" disabled>✅ Update Current</button>
+      </div>
+    </div>
+
+    <!-- Right: Controls -->
+    <div class="card" id="card-controls">
+      <h3>Controls</h3>
+      <div class="controls">
+        <button id="startBtn" class="btn pulse">⏺ Start</button>
+        <button id="pauseBtn" class="btn pause" disabled>⏸ Pause</button>
+        <button id="stopBtn"  class="btn stop"  disabled>⏹ Stop</button>
+        <button id="downloadBtn" class="btn save" disabled>⬇️ Download</button>
+        <button id="clearBtn" class="btn" style="background:linear-gradient(180deg,#94a3b8,#475569);color:#fff;">🧹 Clear</button>
+        <button id="copyBtn" class="btn soft">📋 Copy</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== History ===== -->
+  <section class="history card inview" id="historyCard" style="margin-top:16px;">
+    <h3>🗂 Transcript History</h3>
+    <div class="items" id="historyList">
+      <!-- items injected by JS -->
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast">Ready</div>
+
+<script>
+  /* ===== Slide-in cards ===== */
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('inview'); io.unobserve(e.target);} });
+  },{threshold:.15});
+  document.querySelectorAll('.card:not(#historyCard)').forEach((c,i)=> setTimeout(()=> io.observe(c), 100+i*120));
+
+  /* ===== Button micro-stagger ===== */
+  const btns = document.querySelectorAll('.controls .btn');
+  btns.forEach((b,i)=>{
+    b.style.opacity='0'; b.style.transform='translateY(14px)';
+    setTimeout(()=>{ b.style.transition='all .45s ease'; b.style.opacity='1'; b.style.transform='translateY(0)'; }, 450 + i*60);
+  });
+
+  /* ===== Toast ===== */
+  const toast = document.getElementById('toast');
+  const showToast = (msg)=>{ toast.textContent = msg; toast.classList.add('show'); setTimeout(()=> toast.classList.remove('show'), 1600); };
+
+  /* ===== Speech Recognition ===== */
+  let recognition, isPaused=false, transcriptText='';
+  const output = document.getElementById('output');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const updateBtn = document.getElementById('updateBtn');
+  const wave = document.getElementById('wave');
+  const stateDot = document.getElementById('stateDot');
+  const stateText= document.getElementById('stateText');
+
+  let currentOpenId = null; // history item currently opened
+
+  const setState = (state)=>{
+    // state: idle | recording | paused
+    stateDot.className = 'dot ' + (state==='recording'?'rec':state==='paused'?'pau':'idl');
+    stateText.textContent = state[0].toUpperCase()+state.slice(1);
+    wave.classList.toggle('active', state==='recording');
+    startBtn.classList.toggle('record', state==='recording');
+    startBtn.classList.toggle('pulse', true);
+  };
+
+  if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (e)=>{
+      let interim = '';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const chunk = e.results[i][0].transcript;
+        if(e.results[i].isFinal) transcriptText += chunk + ' ';
+        else interim += chunk;
+      }
+      output.value = (transcriptText + interim).trim();
+      saveBtn.disabled = !output.value.trim();
+      if(currentOpenId) updateBtn.disabled = false;
+    };
+    recognition.onerror = (e)=> { console.error(e.error); showToast('Speech error: ' + e.error); };
+    recognition.onend = ()=>{ if(isPaused){ setState('paused'); } else { setState('idle'); } };
+  } else {
+    alert('Sorry, your browser does not support Speech Recognition.');
+  }
+
+  /* ===== Controls ===== */
+  startBtn.onclick = ()=>{
+    if(!recognition) return;
+    recognition.start();
+    isPaused = false;
+    startBtn.disabled = true; pauseBtn.disabled = false; stopBtn.disabled = false;
+    setState('recording');
+    startBtn.textContent = '⏺ Recording';
+    showToast('Recording started');
+  };
+
+  pauseBtn.onclick = ()=>{
+    if(!recognition) return;
+    if(isPaused){
+      recognition.start(); isPaused = false; setState('recording');
+      pauseBtn.textContent = '⏸ Pause'; showToast('Resumed');
+    }else{
+      recognition.stop(); isPaused = true; setState('paused');
+      pauseBtn.textContent = '▶️ Resume'; showToast('Paused');
+    }
+  };
+
+  stopBtn.onclick = ()=>{
+    if(!recognition) return;
+    recognition.stop(); isPaused = false; setState('idle');
+    startBtn.disabled = false; pauseBtn.disabled = true; stopBtn.disabled = true;
+    downloadBtn.disabled = !output.value.trim();
+    saveBtn.disabled = !output.value.trim();
+    pauseBtn.textContent = '⏸ Pause'; startBtn.textContent = '⏺ Start';
+    showToast('Stopped');
+  };
+
+  downloadBtn.onclick = ()=> downloadText((output.value||'').trim(), 'speech_transcript.txt');
+
+  clearBtn.onclick = ()=>{
+    transcriptText=''; output.value=''; currentOpenId=null;
+    downloadBtn.disabled = true; saveBtn.disabled = true; updateBtn.disabled = true;
+    showToast('Cleared');
+  };
+
+  copyBtn.onclick = async ()=>{
+    try{ await navigator.clipboard.writeText(output.value||''); showToast('Copied'); }
+    catch{ showToast('Copy failed'); }
+  };
+
+  /* ===== History (localStorage) ===== */
+  const KEY = 'll_records_v1';
+
+  function loadHistory(){
+    try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }
+    catch{ return []; }
+  }
+  function saveHistory(list){ localStorage.setItem(KEY, JSON.stringify(list)); }
+
+  function uid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+  function fmt(ts){
+    const d=new Date(ts);
+    return d.toLocaleString();
+  }
+
+  function renderHistory(){
+    const list = loadHistory().sort((a,b)=> b.updatedAt - a.updatedAt);
+    const wrap = document.getElementById('historyList');
+    wrap.innerHTML = '';
+    if(list.length===0){
+      wrap.innerHTML = '<div class="item"><div class="meta"><div class="item-title">No transcripts yet</div><div class="item-date">Saved items will appear here.</div></div></div>';
+      return;
+    }
+    list.forEach(item=>{
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = `
+        <div class="meta">
+          <div class="title-row">
+            <span class="item-title">${escapeHtml(item.title)}</span>
+          </div>
+          <div class="item-date">Updated ${escapeHtml(fmt(item.updatedAt))}</div>
+        </div>
+        <div class="actions">
+          <button class="mini open">Open</button>
+          <button class="mini down">Download</button>
+          <button class="mini edit">Edit</button>
+          <button class="mini del">Delete</button>
+        </div>
+      `;
+      el.querySelector('.open').onclick = ()=> openItem(item.id);
+      el.querySelector('.down').onclick = ()=> downloadText(item.content, (item.title||'transcript')+'.txt');
+      el.querySelector('.edit').onclick = ()=> renameItem(item.id);
+      el.querySelector('.del').onclick  = ()=> deleteItem(item.id);
+      wrap.appendChild(el);
+    });
+  }
+
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+  function downloadText(text, filename){
+    if(!text) return;
+    const blob = new Blob([text], { type:'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('Downloaded');
+  }
+
+  function saveCurrent(){
+    const content = (output.value||'').trim();
+    if(!content) return showToast('Nothing to save');
+    const title = prompt('Title for this transcript:', 'Recording ' + new Date().toLocaleString()) || 'Untitled';
+    const list = loadHistory();
+    const item = { id: uid(), title, content, createdAt: Date.now(), updatedAt: Date.now() };
+    list.push(item); saveHistory(list); renderHistory();
+    currentOpenId = item.id;
+    updateBtn.disabled = false;
+    showToast('Saved to history');
+  }
+
+  function openItem(id){
+    const list = loadHistory();
+    const item = list.find(x=>x.id===id);
+    if(!item) return;
+    output.removeAttribute('readonly');
+    output.value = item.content;
+    transcriptText = item.content;
+    downloadBtn.disabled = !output.value.trim();
+    saveBtn.disabled = false;
+    updateBtn.disabled = false;
+    currentOpenId = id;
+    showToast('Opened: ' + item.title);
+  }
+
+  function renameItem(id){
+    const list = loadHistory();
+    const idx = list.findIndex(x=>x.id===id);
+    if(idx<0) return;
+    const newTitle = prompt('Rename transcript:', list[idx].title);
+    if(!newTitle) return;
+    list[idx].title = newTitle;
+    list[idx].updatedAt = Date.now();
+    saveHistory(list); renderHistory();
+    showToast('Renamed');
+  }
+
+  function deleteItem(id){
+    if(!confirm('Delete this transcript?')) return;
+    let list = loadHistory();
+    list = list.filter(x=>x.id!==id);
+    saveHistory(list); renderHistory();
+    if(currentOpenId===id){ currentOpenId=null; output.value=''; transcriptText=''; updateBtn.disabled = true; downloadBtn.disabled = true; }
+    showToast('Deleted');
+  }
+
+  function updateCurrent(){
+    if(!currentOpenId) return;
+    const list = loadHistory();
+    const idx = list.findIndex(x=>x.id===currentOpenId);
+    if(idx<0) return;
+    const content = (output.value||'').trim();
+    list[idx].content = content;
+    list[idx].updatedAt = Date.now();
+    saveHistory(list); renderHistory();
+    showToast('Updated');
+  }
+
+  // Buttons
+  saveBtn.onclick = saveCurrent;
+  updateBtn.onclick = updateCurrent;
+
+  // Initial render
+  renderHistory();
+
+  // Enable editing of opened text area
+  output.addEventListener('input', ()=>{
+    transcriptText = output.value;
+    downloadBtn.disabled = !output.value.trim();
+    if(currentOpenId) updateBtn.disabled = false;
+    saveBtn.disabled = !output.value.trim();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LECTURELOOM</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<!-- Social icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+/* ===== Base / Reset ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; scroll-behavior: smooth; }
+body { font-family: 'Poppins', sans-serif; color: #fff; background:#0b0b0d; overflow-x: hidden; }
+
+/* ===== Sticky Navbar ===== */
+nav {
+  position: sticky; top: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 28px;
+  background: rgba(0,0,0,0.35); backdrop-filter: blur(6px);
+  transition: background .3s ease, box-shadow .3s ease, padding .3s ease;
+}
+nav.scrolled { background: rgba(0,0,0,0.8); box-shadow: 0 4px 18px rgba(0,0,0,0.35); padding: 12px 28px; }
+.nav-logo { display:flex; align-items:center; gap:10px; cursor:pointer; }
+.nav-logo span { font-size: 1.4rem; font-weight: 700; color: #ffd700; letter-spacing: .5px; }
+.nav-links { display: flex; gap: 14px; }
+.nav-links a {
+  text-decoration: none; color: #fff; font-weight: 500;
+  padding: 8px 10px; border-radius: 8px; position: relative;
+  transition: color .25s ease, background .25s ease;
+}
+.nav-links a:hover { color: #1ea7ff; }
+.nav-links a[data-current="true"] {
+  color:#0b0b0d; background: linear-gradient(135deg,#ffcc00,#ff9900); font-weight: 600;
+}
+
+/* ===== Sections ===== */
+.section {
+  position: relative; min-height: 100vh; width: 100%;
+  display: grid; place-items: center; text-align: center; padding: 80px 24px;
+  opacity: 0; transform: translateY(60px) scale(0.98);
+  transition: opacity 1s ease, transform 1s ease;
+}
+.section.visible { opacity: 1; transform: translateY(0) scale(1); }
+.section::before {
+  content: ''; position: absolute; inset: 0;
+  background-position: center; background-size: cover; background-repeat: no-repeat;
+  z-index: -2;
+}
+.section::after { content:''; position: absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.55)); z-index: -1; }
+
+/* Backgrounds (swap if you like) */
+#s1::before { background-image: url('https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?q=80&w=1920&auto=format&fit=crop'); }
+#s2::before { background-image: url('https://images.unsplash.com/photo-1529336953121-ad5a0674e89e?q=80&w=1920&auto=format&fit=crop'); }
+#s3::before { background-image: url('https://images.unsplash.com/photo-1506765515384-028b60a970df?q=80&w=1920&auto=format&fit=crop'); }
+#s4::before { background-image: url('https://images.unsplash.com/photo-1496307664660-3e0b0b1a66f6?q=80&w=1920&auto=format&fit=crop'); }
+
+/* ===== Hero ===== */
+.hero-wrap { max-width: 900px; margin: 0 auto; }
+.eyebrow { letter-spacing: 5px; font-size: 14px; color:#1ea7ff; }
+.hero-title { font-size: clamp(32px, 6vw, 56px); line-height: 1.1; margin: 12px 0 10px; }
+.lead { font-size: clamp(16px, 2.2vw, 20px); color:#e8eef6; opacity:.95; }
+.btn {
+  display:inline-block; padding:12px 18px; border-radius:12px; border:none; cursor:pointer;
+  background: linear-gradient(135deg,#ffcc00,#ff9900); color:#0b0b0d; font-weight:600;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255,193,7,.3); }
+
+/* ===== Cards (animated gradient + hover pop/rotate) ===== */
+.card-grid {
+  width: min(1200px, 92vw);
+  display: grid; grid-template-columns: repeat( auto-fit, minmax(260px, 1fr) );
+  gap: 26px;
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.card {
+  position: relative;
+  background: linear-gradient(135deg, #ffcc00, #ff9900, #1ea7ff, #ff007f);
+  background-size: 400% 400%;
+  animation: gradientShift 6s ease infinite;
+  border-radius: 18px; padding: 28px 22px; color: #fff; text-align: left;
+  box-shadow: 0 10px 24px rgba(0,0,0,.25);
+  transform-style: preserve-3d;
+  transition: transform .5s ease, box-shadow .5s ease;
+}
+.card:hover { transform: rotateY(10deg) rotateX(8deg) scale(1.08); box-shadow: 0 18px 36px rgba(0,0,0,.4); }
+.card::before { content:''; position:absolute; inset:0; border-radius:18px; background:rgba(0,0,0,.25); z-index:-1; }
+.card .icon { font-size: 28px; }
+.card h3 { margin: 12px 0 6px; font-size: 22px; }
+.card p { color:#f1f1f1; }
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat( auto-fit, minmax(180px, 1fr) );
+  gap: 16px;
+}
+.kpi {
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 14px;
+  padding: 16px;
+  background: rgba(0,0,0,.35);
+}
+.kpi b { font-size: 28px; display:block; }
+
+/* ===== Footer Enhancements ===== */
+#s4::after { background: linear-gradient(180deg, rgba(0,0,0,.6), rgba(0,0,0,.92)); }
+.footer-shell { width: 100%; display: grid; place-items: center; }
+.footer-wrap {
+  width: min(1200px, 92vw);
+  position: relative;
+  border-top: 2px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(10px);
+  padding: 48px 22px;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -5px 20px rgba(0,0,0,0.4);
+  animation: footerSlide 1s ease both;
+}
+@keyframes footerSlide { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr 1.2fr;
+  gap: 22px;
+}
+@media (max-width: 1024px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px)  { .footer-grid { grid-template-columns: 1fr; } }
+
+.footer-col h3 { color: #ffcc00; margin-bottom: 10px; transition: text-shadow .3s ease; }
+.footer-col h3:hover { text-shadow: 0 0 10px #ffcc00; }
+.footer-col p, .footer-col a { color: #eef1f7; text-decoration: none; }
+.footer-col a:hover { color: #ffcc00; }
+
+/* Social icons */
+.social-icons a {
+  font-size: 22px; margin-right: 14px; color: #fff;
+  display:inline-flex; align-items:center; justify-content:center;
+  width: 40px; height: 40px; border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  transition: transform .3s, color .3s, box-shadow .3s, background .3s;
+}
+.social-icons a:hover {
+  transform: translateY(-3px) scale(1.05);
+  color: #ffcc00; background: rgba(255,255,255,0.12);
+  box-shadow: 0 8px 22px rgba(255,193,7,.25);
+}
+
+/* Newsletter form */
+.newsletter {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 14px; padding: 14px;
+}
+.newsletter p { color:#e9edf6; }
+.newsletter-form { display: flex; gap: 10px; margin-top: 10px; }
+.newsletter-form input {
+  flex: 1; padding: 12px; border: none; border-radius: 8px;
+  outline: none; background: rgba(255,255,255,0.9); color:#0b0b0d; font-weight: 500;
+}
+.newsletter-form button {
+  background: linear-gradient(135deg, #ffcc00, #ff9900);
+  border: none; border-radius: 8px; padding: 12px 16px; font-weight: 700;
+  cursor: pointer; color: #000; transition: transform .2s ease, box-shadow .2s ease;
+}
+.newsletter-form button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255,193,7,.3); }
+
+/* Footer bottom */
+.footer-bottom {
+  margin-top: 20px; font-size: 14px; color:#e9e9e9;
+  border-top:1px solid rgba(255,255,255,.2); padding-top:10px; text-align:center;
+}
+
+/* Back to Top */
+#backToTop {
+  position: fixed; bottom: 20px; right: 20px;
+  background: linear-gradient(135deg, #ffcc00, #ff9900);
+  color: #000; border: none; border-radius: 50%;
+  width: 46px; height: 46px; font-size: 22px; font-weight: bold;
+  cursor: pointer; box-shadow: 0 0 15px rgba(255,193,7,.3);
+  display: none; transition: transform .3s ease, box-shadow .3s ease; z-index: 1100;
+}
+#backToTop:hover { transform: scale(1.08); box-shadow: 0 0 25px rgba(255,193,7,.5); }
+
+/* Toast (subscribe success) */
+.toast {
+  position: fixed; left: 50%; bottom: 80px; transform: translateX(-50%) translateY(20px);
+  background: rgba(0,0,0,0.85); color: #fff; padding: 12px 16px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s; z-index: 1100;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Optional: Spline robot positioning (hide on mobile) */
+.robort-3D { position: absolute; top: 8%; right: 6%; z-index: 0; opacity:.55; pointer-events:none; }
+@media (max-width: 900px){ .robort-3D { display:none; } }
+</style>
+</head>
+
+<body>
+<!-- ===== NAVBAR ===== -->
+<nav id="topnav">
+  <div class="nav-logo" onclick="window.location.href='{{ url_for('home1') }}'">
+    <span>LectureLoom</span>
+  </div>
+  <div class="nav-links">
+    <a href="{{ url_for('home1') }}" data-current="true">HOME</a>
+    <a href="{{ url_for('summarize_page') }}">SUMMARIZE</a>
+    <a href="{{ url_for('focus_page') }}">FOCUS</a>
+    <a href="{{ url_for('translate_page') }}">TRANSLATE</a>
+    <a href="{{ url_for('recorde_page') }}">RECORD</a>
+   
+  </div>
+</nav>
+
+
+
+<!-- ===== SECTION 1: HERO ===== -->
+<section id="s1" class="section">
+  <div class="hero-wrap">
+    <div class="eyebrow">LECTURELOOM</div>
+    <h1 class="hero-title">Focus on learning, we’ll handle the notes.</h1>
+    <p class="lead">Convert live lectures & videos into organized notes instantly — learn smarter & faster!</p>
+    <div style="margin-top:18px;">
+      <a class="btn" href="{{ url_for('summarize_page') }}">Start Summarizing</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 2: CARDS ===== -->
+<section id="s2" class="section">
+  <div class="card-grid" aria-label="features">
+    <div class="card"><div class="icon">✔️</div><h3>Clarity Over Complexity</h3><p>Simplifies difficult topics into digestible learning.</p></div>
+    <div class="card"><div class="icon">🧠</div><h3>LIVE RECORD</h3><p>We transcribe what you speak — hands-free notes.</p></div>
+    <div class="card"><div class="icon">⚡</div><h3>Focus Mode</h3><p>Study efficiently with distraction-free UI.</p></div>
+    <div class="card"><div class="icon">🌐</div><h3>Translate</h3><p>Learn in your own language for better understanding.</p></div>
+    <div class="card"><div class="icon">🎬</div><h3>Video → Notes</h3><p>Paste a YouTube URL and get clean notes instantly.</p></div>
+    <div class="card"><div class="icon">📝</div><h3>Smart Summary</h3><p>Get key points from any long topic instantly.</p></div>
+  </div>
+</section>
+
+<!-- ===== SECTION 3: CTA / KPIs ===== -->
+<section id="s3" class="section">
+  <div>
+    <h2 class="hero-title">Make every lecture count.</h2>
+    <p class="lead">From classrooms to podcasts — capture, summarize, and remember more with LectureLoom.</p>
+    <div class="kpis">
+      <div class="kpi"><b>95%</b> Avg. reduction in note-taking effort</div>
+      <div class="kpi"><b>10x</b> Faster revision with summaries</div>
+      <div class="kpi"><b>5+</b> Languages supported</div>
+      <div class="kpi"><b>∞</b> Long videos handled with ease</div>
+    </div>
+    <div style="margin-top:20px;">
+      <a class="btn" href="{{ url_for('focus_page') }}">Try Focus Mode</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 4: FOOTER (FULLY INTEGRATED) ===== -->
+<section id="s4" class="section" aria-label="footer">
+  <div class="footer-shell">
+    <div class="footer-wrap">
+      <div class="footer-grid">
+        <!-- About -->
+        <div class="footer-col">
+          <h3>About</h3>
+          <p>Smart notes from lectures, YouTube, courses & more. Built for speed, clarity, and focus.</p>
+        </div>
+
+        <!-- Contact -->
+        <div class="footer-col">
+          <h3>Contact</h3>
+          <p>📞 +91 98765 43210</p>
+          <p>🏠 Belagavi, India</p>
+          <p>✉️ support@lectureloom.app</p>
+        </div>
+
+        <!-- Social Icons -->
+        <div class="footer-col">
+          <h3>Connect</h3>
+          <div class="social-icons" aria-label="social links">
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+          </div>
+        </div>
+
+        <!-- Newsletter -->
+        <div class="footer-col">
+          <h3>Subscribe</h3>
+          <div class="newsletter">
+            <p>Join our learning circle — receive updates, study tips & AI tools weekly.</p>
+            <form class="newsletter-form" id="newsletterForm">
+              <input type="email" id="newsletterEmail" placeholder="Your Email" aria-label="Email address" required>
+              <button type="submit" aria-label="Subscribe">Subscribe</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        © 2025 LectureLoom — “Turning lectures into lifelong learning.”
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Back to Top -->
+<button id="backToTop" title="Back to top" aria-label="Back to top">↑</button>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite">Thanks! You’re subscribed. 🎉</div>
+
+<script>
+/* Reveal sections on scroll */
+const sections = document.querySelectorAll('.section');
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+},{threshold:0.2});
+sections.forEach(s=>io.observe(s));
+
+/* Sticky nav style toggle */
+const nav = document.getElementById('topnav');
+const hero = document.getElementById('s1');
+const topIO = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(!entry.isIntersecting) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
+  });
+},{threshold:0.6});
+topIO.observe(hero);
+
+/* Back to Top */
+const topBtn = document.getElementById("backToTop");
+window.addEventListener("scroll", () => {
+  topBtn.style.display = (window.scrollY > 400) ? "block" : "none";
+});
+topBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+/* Newsletter (demo only: prevent real submit) */
+const form = document.getElementById('newsletterForm');
+const emailInput = document.getElementById('newsletterEmail');
+const toast = document.getElementById('toast');
+form.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const email = (emailInput.value || '').trim();
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    toast.textContent = "Please enter a valid email.";
+  } else {
+    toast.textContent = "Thanks! You’re subscribed. 🎉";
+    form.reset();
+  }
+  toast.classList.add('show');
+  setTimeout(()=> toast.classList.remove('show'), 2200);
+});
+</script>
+</body>
+</html>

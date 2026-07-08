@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LectureLoom • Translator</title>
+
+<style>
+:root {
+  --bg-1: #0b1220;
+  --bg-2: #0b1b33;
+  --primary: #ffc107;
+  --text: #e5f0ff;
+  --muted: #a7b7d6;
+}
+
+/* ===== Body & background ===== */
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: "Poppins", system-ui, sans-serif;
+  background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.6s ease;
+}
+
+/* ===== Navbar (same as summarizer page) ===== */
+.navbar {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  background: linear-gradient(180deg, rgba(12,12,14,.9), rgba(12,12,14,.78));
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+}
+
+.navbar-inner {
+  height: 68px;
+  width: min(1200px, 94%);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-badge {
+  width: 38px;
+  height: 38px;
+  background: #ffd54a;
+  color: #111;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  box-shadow: 0 6px 16px rgba(255,213,74,.35);
+}
+.brand-text {
+  color: #ffd54a;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.menu {
+  display: flex;
+  gap: 10px;
+}
+.menu a {
+  text-decoration: none;
+  color: #e9edf3;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+.menu a:hover {
+  color: #fff;
+  transform: translateY(-2px);
+}
+.menu a.active {
+  background: #ffc107;
+  color: #111;
+  box-shadow: 0 10px 24px rgba(255,193,7,.35);
+}
+
+/* ===== Container ===== */
+.container {
+  width: min(1200px, 94%);
+  margin: 30px auto;
+}
+
+/* ===== Title ===== */
+.title h1 {
+  font-size: 30px;
+  color: #9cc4ff;
+  text-shadow: 0 0 10px rgba(79,140,255,.4);
+  margin-bottom: 4px;
+}
+.subtitle {
+  color: var(--muted);
+}
+
+/* ===== Cards ===== */
+.grid {
+  display: grid;
+  gap: 18px;
+  margin-top: 22px;
+}
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 18px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 16px 40px rgba(0,0,0,.35);
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease;
+}
+.card.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card h3 {
+  margin-top: 0;
+  color: #cfe0ff;
+}
+
+/* ===== Drop Zone ===== */
+.drop {
+  border: 2px dashed rgba(255,255,255,0.22);
+  border-radius: 14px;
+  padding: 18px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+.drop.drag {
+  border-color: var(--primary);
+  background: rgba(255,255,255,0.08);
+}
+
+/* ===== Language selector ===== */
+.lang-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+.chip {
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.chip:hover {
+  transform: translateY(-2px);
+}
+.chip.active {
+  background: var(--primary);
+  color: #111;
+  box-shadow: 0 8px 20px rgba(255,193,7,0.3);
+}
+
+/* ===== Buttons & Textarea ===== */
+button {
+  margin: 8px 4px 0 0;
+  padding: 10px 16px;
+  font-size: 14px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  background: rgba(255,255,255,0.08);
+  transition: all 0.2s ease;
+}
+button.primary {
+  background: linear-gradient(180deg, #4f8cff, #3a6df0);
+}
+button.success {
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+textarea {
+  width: 95%;
+  min-height: 220px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.3);
+  color: #e2e8f0;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  resize: vertical;
+  outline: none;
+}
+
+/* ===== Loader ===== */
+.loader {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,.25);
+  border-top-color: #9cc4ff;
+  animation: spin 1s linear infinite;
+  margin-left: 8px;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(20,30,55,.9);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  padding: 10px 14px;
+  opacity: 0;
+  transition: all 0.35s ease;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <div class="brand">
+      <div class="brand-badge">L</div>
+      <div class="brand-text">LectureLoom</div>
+    </div>
+    <div class="menu">
+      <a href="{{ url_for('home1') }}">HOME</a>
+      <a href="{{ url_for('summarize_page') }}">SUMMARIZE</a>
+      <a href="{{ url_for('focus_page') }}">FOCUS</a>
+      <a href="{{ url_for('translate_page') }}" class="active">TRANSLATE</a>
+      <a href="{{ url_for('recorde_page') }}">RECORD</a>
+     
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <section class="title">
+    <h1>🌐 File Translator</h1>
+    <p class="subtitle">Upload a .txt file → choose a language → translate → download.</p>
+  </section>
+
+  <section class="grid">
+    <div class="card" id="card1">
+      <h3>1) Upload File</h3>
+      <div class="drop" id="dropZone">
+        <input type="file" id="fileInput" accept=".txt" style="display:none;">
+        <button class="primary" id="pickBtn">Choose .txt file</button>
+        <p class="subtitle">or drag & drop your text file</p>
+      </div>
+    </div>
+
+    <div class="card" id="card2">
+      <h3>2) Choose Language</h3>
+      <div class="lang-picker" id="langPicker"></div>
+    </div>
+
+    <div class="card" id="card3">
+      <h3>3) Translate</h3>
+      <button class="primary" id="convertBtn">Translate</button>
+      <button class="success" id="downloadBtn" disabled>Download</button>
+      <span id="loading" style="display:none" class="loader"></span>
+    </div>
+
+    <div class="card" id="card4" style="grid-column:1/-1;">
+      <h3>4) Output</h3>
+      <textarea id="output" placeholder="Translated text will appear here..." readonly></textarea>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast">Ready</div>
+
+<script>
+/* ===== Elements ===== */
+const fileInput = document.getElementById('fileInput');
+const pickBtn = document.getElementById('pickBtn');
+const dropZone = document.getElementById('dropZone');
+const convertBtn = document.getElementById('convertBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const output = document.getElementById('output');
+const langPicker = document.getElementById('langPicker');
+const toast = document.getElementById('toast');
+const loading = document.getElementById('loading');
+
+let originalText = '';
+let translatedText = '';
+
+/* ===== Toast ===== */
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+/* ===== Language Selection ===== */
+const LANGS = [
+  { code: 'es', label: 'Spanish', color: '#f59e0b', bg1:'#20140b', bg2:'#331e0b' },
+  { code: 'fr', label: 'French', color: '#60a5fa', bg1:'#0a1426', bg2:'#101a33' },
+  { code: 'de', label: 'German', color: '#f43f5e', bg1:'#111827', bg2:'#0b1220' },
+  { code: 'hi', label: 'Hindi', color: '#22c55e', bg1:'#0b1324', bg2:'#081120' },
+  { code: 'zh-CN', label: 'Chinese', color: '#ef4444', bg1:'#1b0b0b', bg2:'#330b0b' },
+  { code: 'ja', label: 'Japanese', color: '#fb7185', bg1:'#0a1222', bg2:'#0c1830' },
+  { code: 'ar', label: 'Arabic', color: '#38bdf8', bg1:'#07101e', bg2:'#09172c' },
+  { code: 'ru', label: 'Russian', color: '#60a5fa', bg1:'#0a1426', bg2:'#0b1b33' }
+];
+
+let currentLang = 'es';
+function renderLangs() {
+  langPicker.innerHTML = '';
+  LANGS.forEach(l => {
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (l.code === currentLang ? ' active' : '');
+    chip.textContent = l.label;
+    chip.onclick = () => selectLang(l);
+    langPicker.appendChild(chip);
+  });
+}
+function selectLang(lang) {
+  currentLang = lang.code;
+  document.documentElement.style.setProperty('--primary', lang.color);
+  document.documentElement.style.setProperty('--bg-1', lang.bg1);
+  document.documentElement.style.setProperty('--bg-2', lang.bg2);
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  showToast(`${lang.label} selected`);
+}
+renderLangs();
+
+/* ===== Reveal animation ===== */
+const cards = document.querySelectorAll('.card');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('show');
+  });
+});
+cards.forEach(card => observer.observe(card));
+
+/* ===== File Handling ===== */
+pickBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+['dragenter', 'dragover'].forEach(evt =>
+  dropZone.addEventListener(evt, e => {
+    e.preventDefault(); e.stopPropagation();
+    dropZone.classList.add('drag');
+  })
+);
+['dragleave', 'drop'].forEach(evt =>
+  dropZone.addEventListener(evt, e => {
+    e.preventDefault(); e.stopPropagation();
+    dropZone.classList.remove('drag');
+  })
+);
+dropZone.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+
+function handleFiles(files) {
+  const file = files && files[0];
+  if (file && file.type === "text/plain") {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      originalText = ev.target.result;
+      output.value = originalText;
+      translatedText = '';
+      downloadBtn.disabled = true;
+      showToast('File loaded');
+    };
+    reader.readAsText(file);
+  } else showToast('Please upload a .txt file');
+}
+
+/* ===== Translation ===== */
+convertBtn.addEventListener('click', async () => {
+  if (!originalText.trim()) return showToast('Upload a file first');
+  const lang = currentLang;
+  loading.style.display = 'inline-block';
+  output.value = 'Translating... please wait ⏳';
+  try {
+    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(originalText)}&langpair=en|${lang}`);
+    const data = await res.json();
+    translatedText = data?.responseData?.translatedText || '';
+    output.value = translatedText || '⚠️ Translation not available.';
+    downloadBtn.disabled = !translatedText;
+    showToast('Translation complete');
+  } catch {
+    output.value = '⚠️ Error during translation.';
+    showToast('Error occurred');
+  } finally {
+    loading.style.display = 'none';
+  }
+});
+
+/* ===== Download ===== */
+downloadBtn.addEventListener('click', () => {
+  if (!translatedText) return;
+  const blob = new Blob([translatedText], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'translated_text.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('Downloaded');
+});
+</script>
+</body>
+</html>

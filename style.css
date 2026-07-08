@@ -1,0 +1,252 @@
+/* ===== Global Reset ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ===== Body Background ===== */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #2b1055, #7597de);
+  overflow: hidden;
+}
+/* ===== Dark/Light Theme Toggle ===== */
+.theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  color: #fff;
+}
+
+.theme-toggle input {
+  margin-right: 10px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+/* ===== Light Mode ===== */
+body.light-mode {
+  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+  color: #111;
+}
+
+body.light-mode .login-container {
+  background: rgba(255, 255, 255, 0.6);
+  color: #111;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.2);
+}
+
+body.light-mode .input-group input {
+  border-bottom: 2px solid #111;
+  color: #111;
+}
+
+body.light-mode .input-group input:focus {
+  border-color: #0078ff;
+}
+
+body.light-mode .input-group label {
+  color: #555;
+}
+
+body.light-mode .btn {
+  background: #0078ff;
+  color: #fff;
+}
+
+body.light-mode .btn:hover {
+  background: #005fcc;
+}
+
+body.light-mode a {
+  color: #0078ff;
+}
+
+
+/* ===== Login/Register Card ===== */
+.login-container {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+  width: 350px;
+  padding: 40px 30px;
+  color: #fff;
+  text-align: center;
+  animation: fadeIn 1s ease forwards;
+  transform: translateY(30px);
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ===== Title ===== */
+.login-container h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+  color: #ffffff;
+}
+
+/* ===== Input Fields ===== */
+.input-group {
+  position: relative;
+  margin: 25px 0;
+  text-align: left;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 10px 40px 10px 10px;
+  border: none;
+  outline: none;
+  background: transparent;
+  border-bottom: 2px solid #fff;
+  color: #fff;
+  font-size: 16px;
+  transition: 0.3s;
+}
+
+.input-group input:focus {
+  border-color: #00ffcc;
+}
+
+.input-group label {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #ccc;
+  transition: 0.3s;
+}
+
+.input-group input:focus + label,
+.input-group input:valid + label {
+  top: -5px;
+  left: 5px;
+  font-size: 12px;
+  color: #00ffcc;
+}
+
+/* ===== Show Password Icon ===== */
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #ccc;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.toggle-password:hover {
+  color: #00ffcc;
+}
+
+/* ===== Buttons ===== */
+.btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 25px;
+  background: #00ffcc;
+  color: #111;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+.btn:hover {
+  background: #03c8a8;
+  transform: scale(1.02);
+}
+
+/* ===== Options Text ===== */
+.options {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.options a {
+  color: #00ffcc;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.options a:hover {
+  text-decoration: underline;
+}
+
+/* ===== Floating Circles ===== */
+.circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  animation: float 10s infinite ease-in-out;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-30px); }
+}
+
+.circle:nth-child(1) {
+  width: 100px;
+  height: 100px;
+  top: 10%;
+  left: 15%;
+}
+
+.circle:nth-child(2) {
+  width: 70px;
+  height: 70px;
+  bottom: 20%;
+  right: 15%;
+  animation-delay: 3s;
+}
+
+.circle:nth-child(3) {
+  width: 120px;
+  height: 120px;
+  top: 70%;
+  left: 10%;
+  animation-delay: 5s;
+}
+
+/* ===== Flash Message Styling ===== */
+p {
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 480px) {
+  .login-container {
+    width: 90%;
+    padding: 30px 20px;
+  }
+  .login-container h2 {
+    font-size: 24px;
+  }
+  .btn {
+    font-size: 14px;
+  }
+}
