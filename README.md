@@ -27,7 +27,7 @@ An AI-powered web application that converts lecture audio, video, or YouTube lin
 * Flask
 
 **AI & NLP**
-
+* NLP
 * OpenAI Whisper
 * Transformers (BART Summarization)
 
@@ -48,10 +48,6 @@ An AI-powered web application that converts lecture audio, video, or YouTube lin
 * Saves students' note-taking time.
 * Produces clear and organized study material.
 * Improves learning efficiency with AI-generated summaries.
-
-## 📸 Screenshots
-
-*Add screenshots of your application here.*
 
 ## 🔮 Future Enhancements
 
