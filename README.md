@@ -1,5 +1,4 @@
 # AI-Based-Lecture-To-Notes
-# 📚 AI-Based Lecture to Notes Converter
 
 An AI-powered web application that converts lecture audio, video, or YouTube links into well-structured, easy-to-read notes using Speech-to-Text and Natural Language Processing (NLP). The application helps students save time by automatically generating summarized study notes.
 
